@@ -110,8 +110,14 @@ class SCM_Import_Export {
 					'post_id'   => intval( $data['post_id'] ),
 				) );
 			} elseif ( $type === 'content_posts' ) {
+				$post_content = wp_kses_post( $data['post_content'] );
+				$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table_name WHERE post_content = %s", $post_content ) );
+				if ( $exists ) {
+					$skipped++;
+					continue;
+				}
 				$wpdb->insert( $table_name, array(
-					'post_content'            => wp_kses_post( $data['post_content'] ),
+					'post_content'            => $post_content,
 					'good_for_fb_group'       => intval( $data['good_for_fb_group'] ),
 					'good_for_linkedin_group' => intval( $data['good_for_linkedin_group'] ),
 					'facebook'                => intval( $data['facebook'] ),

@@ -13,6 +13,7 @@ if ( $action === 'edit' || $action === 'add' ) {
         <a href="?page=scm-content-posts&action=add" class="page-title-action">Add New</a>
         <form method="get">
             <input type="hidden" name="page" value="<?php echo esc_attr( $_REQUEST['page'] ); ?>" />
+            <?php wp_nonce_field( 'bulk-content_posts' ); ?>
             <?php $table->search_box( 'Search Posts', 'search_id' ); ?>
             <?php $table->display(); ?>
         </form>

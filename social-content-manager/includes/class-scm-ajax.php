@@ -44,8 +44,7 @@ class SCM_AJAX {
 			}
 
 			$post = $wpdb->get_row( $wpdb->prepare(
-				"SELECT * FROM $table_posts WHERE good_for_fb_group = 1 AND (fb_id IS NULL OR fb_id != %d) ORDER BY RAND() LIMIT 1",
-				$group->post_id
+				"SELECT * FROM $table_posts WHERE good_for_fb_group = 1 AND (fb_id IS NULL OR fb_id = 0) ORDER BY RAND() LIMIT 1"
 			) );
 
 			if ( ! $post ) {
@@ -68,8 +67,7 @@ class SCM_AJAX {
 			}
 
 			$post = $wpdb->get_row( $wpdb->prepare(
-				"SELECT * FROM $table_posts WHERE good_for_linkedin_group = 1 AND (linkedin_id IS NULL OR linkedin_id != %d) ORDER BY RAND() LIMIT 1",
-				$group->post_id
+				"SELECT * FROM $table_posts WHERE good_for_linkedin_group = 1 AND (linkedin_id IS NULL OR linkedin_id = 0) ORDER BY RAND() LIMIT 1"
 			) );
 
 			if ( ! $post ) {

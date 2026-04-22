@@ -194,6 +194,8 @@ class SCM_Admin {
 			return;
 		}
 
+		check_admin_referer( 'bulk-' . $this->get_plural_from_page( $_GET['page'] ) );
+
 		$ids = isset( $_REQUEST['bulk-delete'] ) ? array_map( 'intval', $_REQUEST['bulk-delete'] ) : array();
 		if ( empty( $ids ) ) {
 			return;
@@ -223,6 +225,15 @@ class SCM_Admin {
 
 		wp_redirect( remove_query_arg( array( 'action', 'action2', 'bulk-delete', '_wpnonce', '_wp_http_referer' ) ) );
 		exit;
+	}
+
+	private function get_plural_from_page( $page ) {
+		switch ( $page ) {
+			case 'scm-facebook-groups': return 'facebook_groups';
+			case 'scm-linkedin-groups': return 'linkedin_groups';
+			case 'scm-content-posts': return 'content_posts';
+			default: return '';
+		}
 	}
 
 	public function handle_delete_actions() {
