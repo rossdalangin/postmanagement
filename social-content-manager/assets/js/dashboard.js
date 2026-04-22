@@ -79,10 +79,15 @@ jQuery(document).ready(function($) {
                     $('#scm-post-content').val(currentData.content);
 
                     if (currentData.group_url) {
-                        $('#scm-group-info').html('Group: <a href="' + currentData.group_url + '" target="_blank">' + currentData.group_url + '</a> (ID: ' + currentData.group_post_id + ')');
+                        $('#scm-group-info').html('Group URL: <a href="' + currentData.group_url + '" target="_blank" class="scm-target-link">' + currentData.group_url + '</a><br>Group Post ID: ' + currentData.group_post_id);
                         $('#scm-group-link').attr('href', currentData.group_url);
                         $('#scm-group-link-area').show();
-                        // window.open(currentData.group_url, '_blank'); // Blocked by pop-up blockers
+
+                        // Attempt to open in new tab as requested
+                        const newTab = window.open(currentData.group_url, '_blank');
+                        if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+                            console.warn('Popup blocked. Please allow popups for this site.');
+                        }
                     } else {
                         $('#scm-group-info').empty();
                         $('#scm-group-link-area').hide();

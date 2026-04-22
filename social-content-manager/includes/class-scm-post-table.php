@@ -87,8 +87,9 @@ class SCM_Post_Table extends WP_List_Table {
 		$current_page = $this->get_pagenum();
 		$offset       = ( $current_page - 1 ) * $per_page;
 
-		$orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'created_at';
-		$order   = ( ! empty( $_GET['order'] ) ) ? $_GET['order'] : 'DESC';
+		$valid_orderby = array( 'created_at', 'post_content', 'id' );
+		$orderby = ( ! empty( $_GET['orderby'] ) && in_array( $_GET['orderby'], $valid_orderby ) ) ? $_GET['orderby'] : 'created_at';
+		$order   = ( ! empty( $_GET['order'] ) && strtoupper( $_GET['order'] ) === 'ASC' ) ? 'ASC' : 'DESC';
 
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( $_REQUEST['s'] ) : '';
 		$where = '';
