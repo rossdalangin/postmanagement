@@ -22,6 +22,7 @@ class SCM_Post_Table extends WP_List_Table {
 		return array(
 			'cb'           => '<input type="checkbox" />',
 			'post_content' => __( 'Content', 'social-content-manager' ),
+			'category'     => __( 'Category', 'social-content-manager' ),
 			'platforms'    => __( 'Platforms/Targets', 'social-content-manager' ),
 			'created_at'   => __( 'Date', 'social-content-manager' ),
 		);
@@ -99,8 +100,15 @@ class SCM_Post_Table extends WP_List_Table {
 
 		$total_items = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name $where" );
 
+		$table_cat = $wpdb->prefix . 'scm_categories';
 		$this->items = $wpdb->get_results(
-			$wpdb->prepare( "SELECT * FROM $table_name $where ORDER BY $orderby $order LIMIT %d OFFSET %d", $per_page, $offset ),
+			$wpdb->prepare(
+				"SELECT t.*, c.name as category
+				 FROM $table_name t
+				 LEFT JOIN $table_cat c ON t.category_id = c.id
+				 $where ORDER BY $orderby $order LIMIT %d OFFSET %d",
+				$per_page, $offset
+			),
 			ARRAY_A
 		);
 

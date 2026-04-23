@@ -22,6 +22,7 @@ class SCM_LI_Group_Table extends WP_List_Table {
 		return array(
 			'cb'        => '<input type="checkbox" />',
 			'group_url' => __( 'Group URL', 'social-content-manager' ),
+			'category'  => __( 'Category', 'social-content-manager' ),
 			'post_id'   => __( 'Post ID', 'social-content-manager' ),
 		);
 	}
@@ -30,6 +31,7 @@ class SCM_LI_Group_Table extends WP_List_Table {
 		switch ( $column_name ) {
 			case 'group_url':
 			case 'post_id':
+			case 'category':
 				return $item[ $column_name ];
 			default:
 				return print_r( $item, true );
@@ -80,8 +82,15 @@ class SCM_LI_Group_Table extends WP_List_Table {
 
 		$total_items = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name $where" );
 
+		$table_cat = $wpdb->prefix . 'scm_categories';
 		$this->items = $wpdb->get_results(
-			$wpdb->prepare( "SELECT * FROM $table_name $where LIMIT %d OFFSET %d", $per_page, $offset ),
+			$wpdb->prepare(
+				"SELECT t.*, c.name as category
+				 FROM $table_name t
+				 LEFT JOIN $table_cat c ON t.category_id = c.id
+				 $where LIMIT %d OFFSET %d",
+				$per_page, $offset
+			),
 			ARRAY_A
 		);
 

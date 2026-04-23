@@ -11,6 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <input type="hidden" name="action" value="scm_export_csv">
             <?php wp_nonce_field( 'scm_export_nonce' ); ?>
             <select name="export_type">
+                <option value="categories">Categories</option>
                 <option value="facebook_groups">Facebook Groups</option>
                 <option value="linkedin_groups">LinkedIn Groups</option>
                 <option value="content_posts">Content Posts</option>
@@ -26,7 +27,13 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <div class="card">
         <h2>Download CSV Templates</h2>
         <p>Download sample CSV templates to ensure your import file is correctly formatted.</p>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <form method="post" action="<?php echo admin_url( 'admin-post.php' ); ?>">
+                <input type="hidden" name="action" value="scm_download_template">
+                <input type="hidden" name="template_type" value="categories">
+                <?php wp_nonce_field( 'scm_download_template' ); ?>
+                <button type="submit" class="button">Categories Template</button>
+            </form>
             <form method="post" action="<?php echo admin_url( 'admin-post.php' ); ?>">
                 <input type="hidden" name="action" value="scm_download_template">
                 <input type="hidden" name="template_type" value="facebook_groups">
@@ -59,6 +66,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                     <th><label for="import_type">Data Type</label></th>
                     <td>
                         <select name="import_type" id="import_type">
+                            <option value="categories">Categories</option>
                             <option value="facebook_groups">Facebook Groups</option>
                             <option value="linkedin_groups">LinkedIn Groups</option>
                             <option value="content_posts">Content Posts</option>

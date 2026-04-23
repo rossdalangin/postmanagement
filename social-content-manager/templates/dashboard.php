@@ -3,6 +3,21 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 ?>
 <div class="wrap">
     <h1>Posting Dashboard</h1>
+
+    <div class="scm-category-filter" style="margin-bottom: 20px;">
+        <label for="scm-dashboard-category"><strong>Select Category:</strong></label>
+        <select id="scm-dashboard-category">
+            <option value="">-- All Categories --</option>
+            <?php
+            global $wpdb;
+            $categories = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}scm_categories ORDER BY name ASC" );
+            foreach ( $categories as $cat ) {
+                echo '<option value="' . esc_attr( $cat->id ) . '">' . esc_html( $cat->name ) . '</option>';
+            }
+            ?>
+        </select>
+    </div>
+
     <div class="scm-dashboard-buttons">
         <button type="button" class="button scm-platform-btn" data-platform="fb_group">FB Group</button>
         <button type="button" class="button scm-platform-btn" data-platform="li_group">LinkedIn Group</button>

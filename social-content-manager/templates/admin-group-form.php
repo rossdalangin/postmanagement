@@ -8,6 +8,9 @@ if ( $id ) {
     $table_name = $wpdb->prefix . ( $type === 'fb' ? 'scm_facebook_groups' : 'scm_linkedin_groups' );
     $group = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ) );
 }
+
+global $wpdb;
+$categories = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}scm_categories ORDER BY name ASC" );
 ?>
 <div class="wrap">
     <h1><?php echo $id ? 'Edit' : 'Add New'; ?> <?php echo $type === 'fb' ? 'Facebook' : 'LinkedIn'; ?> Group</h1>
@@ -17,6 +20,17 @@ if ( $id ) {
         <input type="hidden" name="id" value="<?php echo esc_attr( $id ); ?>">
         <?php wp_nonce_field( 'scm_save_group_nonce' ); ?>
         <table class="form-table">
+            <tr>
+                <th><label for="category_id">Category</label></th>
+                <td>
+                    <select name="category_id" id="category_id" required>
+                        <option value="">Select Category</option>
+                        <?php foreach ( $categories as $cat ) : ?>
+                            <option value="<?php echo esc_attr( $cat->id ); ?>" <?php if ( $group && $group->category_id == $cat->id ) echo 'selected'; ?>><?php echo esc_html( $cat->name ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
             <tr>
                 <th><label for="group_url">Group URL</label></th>
                 <td><input name="group_url" type="url" id="group_url" value="<?php echo $group ? esc_url( $group->group_url ) : ''; ?>" class="regular-text" required></td>

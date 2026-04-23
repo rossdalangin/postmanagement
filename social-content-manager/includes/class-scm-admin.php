@@ -20,6 +20,7 @@ class SCM_Admin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_post_scm_save_group', array( $this, 'handle_save_group' ) );
 		add_action( 'admin_post_scm_save_post', array( $this, 'handle_save_post' ) );
+		add_action( 'admin_post_scm_save_category', array( $this, 'handle_save_category' ) );
 		add_action( 'admin_init', array( $this, 'handle_bulk_actions' ) );
 		add_action( 'admin_init', array( $this, 'handle_delete_actions' ) );
 	}
@@ -42,6 +43,15 @@ class SCM_Admin {
 			'manage_options',
 			'scm-dashboard',
 			array( $this, 'render_dashboard' )
+		);
+
+		add_submenu_page(
+			'scm-dashboard',
+			__( 'Categories', 'social-content-manager' ),
+			__( 'Categories', 'social-content-manager' ),
+			'manage_options',
+			'scm-categories',
+			array( $this, 'render_categories' )
 		);
 
 		add_submenu_page(
@@ -99,6 +109,10 @@ class SCM_Admin {
 		include SCM_PLUGIN_DIR . 'templates/dashboard.php';
 	}
 
+	public function render_categories() {
+		include SCM_PLUGIN_DIR . 'templates/admin-categories.php';
+	}
+
 	public function render_facebook_groups() {
 		include SCM_PLUGIN_DIR . 'templates/admin-facebook-groups.php';
 	}
@@ -115,6 +129,30 @@ class SCM_Admin {
 		include SCM_PLUGIN_DIR . 'templates/import-export.php';
 	}
 
+	public function handle_save_category() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Unauthorized' );
+		}
+		check_admin_referer( 'scm_save_category_nonce' );
+
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'scm_categories';
+		$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
+
+		$data = array(
+			'name' => sanitize_text_field( $_POST['name'] ),
+		);
+
+		if ( $id ) {
+			$wpdb->update( $table_name, $data, array( 'id' => $id ) );
+		} else {
+			$wpdb->insert( $table_name, $data );
+		}
+
+		wp_redirect( admin_url( 'admin.php?page=scm-categories' ) );
+		exit;
+	}
+
 	public function handle_save_group() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( 'Unauthorized' );
@@ -127,8 +165,9 @@ class SCM_Admin {
 		$id = isset( $_POST['id'] ) ? intval( $_POST['id'] ) : 0;
 
 		$data = array(
-			'group_url' => esc_url_raw( $_POST['group_url'] ),
-			'post_id'   => intval( $_POST['post_id'] ),
+			'group_url'   => esc_url_raw( $_POST['group_url'] ),
+			'post_id'     => intval( $_POST['post_id'] ),
+			'category_id' => intval( $_POST['category_id'] ),
 		);
 
 		if ( $id ) {
@@ -154,6 +193,7 @@ class SCM_Admin {
 
 		$data = array(
 			'post_content'            => wp_kses_post( $_POST['post_content'] ),
+			'category_id'             => intval( $_POST['category_id'] ),
 			'good_for_fb_group'       => isset( $_POST['good_for_fb_group'] ) ? 1 : 0,
 			'good_for_linkedin_group' => isset( $_POST['good_for_linkedin_group'] ) ? 1 : 0,
 			'facebook'                => isset( $_POST['facebook'] ) ? 1 : 0,
@@ -207,6 +247,7 @@ class SCM_Admin {
 		if ( $page === 'scm-facebook-groups' ) $table_name = $wpdb->prefix . 'scm_facebook_groups';
 		elseif ( $page === 'scm-linkedin-groups' ) $table_name = $wpdb->prefix . 'scm_linkedin_groups';
 		elseif ( $page === 'scm-content-posts' ) $table_name = $wpdb->prefix . 'scm_content_posts';
+		elseif ( $page === 'scm-categories' ) $table_name = $wpdb->prefix . 'scm_categories';
 
 		if ( ! $table_name ) {
 			return;
@@ -232,6 +273,7 @@ class SCM_Admin {
 			case 'scm-facebook-groups': return 'facebook_groups';
 			case 'scm-linkedin-groups': return 'linkedin_groups';
 			case 'scm-content-posts': return 'content_posts';
+			case 'scm-categories': return 'categories';
 			default: return '';
 		}
 	}
@@ -247,7 +289,10 @@ class SCM_Admin {
 
 		if ( $action === 'delete' && $id ) {
 			$nonce = isset( $_GET['_wpnonce'] ) ? $_GET['_wpnonce'] : '';
-			$nonce_action = ( strpos( $page, 'posts' ) !== false ) ? 'scm_delete_post_' . $id : 'scm_delete_group_' . $id;
+
+			if ( strpos( $page, 'posts' ) !== false ) $nonce_action = 'scm_delete_post_' . $id;
+			elseif ( strpos( $page, 'categories' ) !== false ) $nonce_action = 'scm_delete_category_' . $id;
+			else $nonce_action = 'scm_delete_group_' . $id;
 
 			if ( ! wp_verify_nonce( $nonce, $nonce_action ) ) {
 				wp_die( 'Security check failed' );
@@ -258,6 +303,7 @@ class SCM_Admin {
 			if ( $page === 'scm-facebook-groups' ) $table_name = $wpdb->prefix . 'scm_facebook_groups';
 			elseif ( $page === 'scm-linkedin-groups' ) $table_name = $wpdb->prefix . 'scm_linkedin_groups';
 			elseif ( $page === 'scm-content-posts' ) $table_name = $wpdb->prefix . 'scm_content_posts';
+			elseif ( $page === 'scm-categories' ) $table_name = $wpdb->prefix . 'scm_categories';
 
 			if ( $table_name ) {
 				$wpdb->delete( $table_name, array( 'id' => $id ) );

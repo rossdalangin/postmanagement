@@ -31,20 +31,23 @@ class SCM_AJAX {
 
 		global $wpdb;
 		$platform = sanitize_text_field( $_POST['platform'] );
+		$category_id = isset( $_POST['category_id'] ) ? intval( $_POST['category_id'] ) : 0;
 		$table_posts = $wpdb->prefix . 'scm_content_posts';
 
 		$response = array();
 
+		$cat_where = $category_id ? $wpdb->prepare( " AND category_id = %d", $category_id ) : "";
+
 		if ( $platform === 'fb_group' ) {
 			$group_table = $wpdb->prefix . 'scm_facebook_groups';
-			$group = $wpdb->get_row( "SELECT * FROM $group_table ORDER BY RAND() LIMIT 1" );
+			$group = $wpdb->get_row( "SELECT * FROM $group_table WHERE 1=1 $cat_where ORDER BY RAND() LIMIT 1" );
 
 			if ( ! $group ) {
 				wp_send_json_error( 'No Facebook groups found.' );
 			}
 
 			$post = $wpdb->get_row( $wpdb->prepare(
-				"SELECT * FROM $table_posts WHERE good_for_fb_group = 1 AND (fb_id IS NULL OR fb_id = 0) ORDER BY RAND() LIMIT 1"
+				"SELECT * FROM $table_posts WHERE good_for_fb_group = 1 AND (fb_id IS NULL OR fb_id = 0) $cat_where ORDER BY RAND() LIMIT 1"
 			) );
 
 			if ( ! $post ) {
@@ -60,14 +63,14 @@ class SCM_AJAX {
 
 		} elseif ( $platform === 'li_group' ) {
 			$group_table = $wpdb->prefix . 'scm_linkedin_groups';
-			$group = $wpdb->get_row( "SELECT * FROM $group_table ORDER BY RAND() LIMIT 1" );
+			$group = $wpdb->get_row( "SELECT * FROM $group_table WHERE 1=1 $cat_where ORDER BY RAND() LIMIT 1" );
 
 			if ( ! $group ) {
 				wp_send_json_error( 'No LinkedIn groups found.' );
 			}
 
 			$post = $wpdb->get_row( $wpdb->prepare(
-				"SELECT * FROM $table_posts WHERE good_for_linkedin_group = 1 AND (linkedin_id IS NULL OR linkedin_id = 0) ORDER BY RAND() LIMIT 1"
+				"SELECT * FROM $table_posts WHERE good_for_linkedin_group = 1 AND (linkedin_id IS NULL OR linkedin_id = 0) $cat_where ORDER BY RAND() LIMIT 1"
 			) );
 
 			if ( ! $post ) {
@@ -88,7 +91,7 @@ class SCM_AJAX {
 				wp_send_json_error( 'Invalid platform.' );
 			}
 
-			$post = $wpdb->get_row( "SELECT * FROM $table_posts WHERE $platform = 0 ORDER BY RAND() LIMIT 1" );
+			$post = $wpdb->get_row( "SELECT * FROM $table_posts WHERE $platform = 0 $cat_where ORDER BY RAND() LIMIT 1" );
 
 			if ( ! $post ) {
 				wp_send_json_error( 'No unused content found for this platform.' );
@@ -111,20 +114,23 @@ class SCM_AJAX {
 		}
 
 		global $wpdb;
+		$category_id = isset( $_POST['category_id'] ) ? intval( $_POST['category_id'] ) : 0;
 		$table_posts = $wpdb->prefix . 'scm_content_posts';
 
+		$cat_where = $category_id ? $wpdb->prepare( " AND category_id = %d", $category_id ) : "";
+
 		$stats = array(
-			'fb_group_unused' => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE good_for_fb_group = 1 AND (fb_id IS NULL OR fb_id = 0)" ),
-			'li_group_unused' => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE good_for_linkedin_group = 1 AND (linkedin_id IS NULL OR linkedin_id = 0)" ),
-			'facebook'        => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE facebook = 1" ),
-			'linkedin'        => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE linkedin = 1" ),
-			'youtube'         => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE youtube = 1" ),
-			'tiktok'          => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE tiktok = 1" ),
-			'pinterest'       => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE pinterest = 1" ),
-			'twitter'         => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE twitter = 1" ),
-			'threads'         => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE threads = 1" ),
-			'ig'              => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE ig = 1" ),
-			'total_posts'     => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts" ),
+			'fb_group_unused' => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE good_for_fb_group = 1 AND (fb_id IS NULL OR fb_id = 0) $cat_where" ),
+			'li_group_unused' => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE good_for_linkedin_group = 1 AND (linkedin_id IS NULL OR linkedin_id = 0) $cat_where" ),
+			'facebook'        => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE facebook = 1 $cat_where" ),
+			'linkedin'        => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE linkedin = 1 $cat_where" ),
+			'youtube'         => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE youtube = 1 $cat_where" ),
+			'tiktok'          => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE tiktok = 1 $cat_where" ),
+			'pinterest'       => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE pinterest = 1 $cat_where" ),
+			'twitter'         => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE twitter = 1 $cat_where" ),
+			'threads'         => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE threads = 1 $cat_where" ),
+			'ig'              => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE ig = 1 $cat_where" ),
+			'total_posts'     => $wpdb->get_var( "SELECT COUNT(id) FROM $table_posts WHERE 1=1 $cat_where" ),
 		);
 
 		wp_send_json_success( $stats );

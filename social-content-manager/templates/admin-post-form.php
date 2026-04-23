@@ -9,6 +9,9 @@ if ( $id ) {
     $post_data = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ) );
 }
 
+global $wpdb;
+$categories = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}scm_categories ORDER BY name ASC" );
+
 $platforms = array(
     'good_for_fb_group' => 'Good for Facebook Group',
     'good_for_linkedin_group' => 'Good for LinkedIn Group',
@@ -29,6 +32,17 @@ $platforms = array(
         <input type="hidden" name="id" value="<?php echo esc_attr( $id ); ?>">
         <?php wp_nonce_field( 'scm_save_post_nonce' ); ?>
         <table class="form-table">
+            <tr>
+                <th><label for="category_id">Category</label></th>
+                <td>
+                    <select name="category_id" id="category_id" required>
+                        <option value="">Select Category</option>
+                        <?php foreach ( $categories as $cat ) : ?>
+                            <option value="<?php echo esc_attr( $cat->id ); ?>" <?php if ( $post_data && $post_data->category_id == $cat->id ) echo 'selected'; ?>><?php echo esc_html( $cat->name ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
             <tr>
                 <th><label for="post_content">Post Content</label></th>
                 <td><textarea name="post_content" id="post_content" rows="10" cols="50" class="large-text" required><?php echo $post_data ? esc_textarea( $post_data->post_content ) : ''; ?></textarea></td>

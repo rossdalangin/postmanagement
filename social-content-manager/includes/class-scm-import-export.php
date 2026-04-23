@@ -89,11 +89,14 @@ class SCM_Import_Export {
 		$output = fopen( 'php://output', 'w' );
 
 		if ( $type === 'content_posts' ) {
-			fputcsv( $output, array( 'post_content', 'good_for_fb_group', 'good_for_linkedin_group', 'facebook', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'twitter', 'threads', 'ig' ) );
-			fputcsv( $output, array( 'Sample social media content here...', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0' ) );
+			fputcsv( $output, array( 'post_content', 'category_id', 'good_for_fb_group', 'good_for_linkedin_group', 'facebook', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'twitter', 'threads', 'ig' ) );
+			fputcsv( $output, array( 'Sample social media content here...', '1', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0' ) );
+		} elseif ( $type === 'categories' ) {
+			fputcsv( $output, array( 'name' ) );
+			fputcsv( $output, array( 'Sample Category' ) );
 		} else {
-			fputcsv( $output, array( 'group_url', 'post_id' ) );
-			fputcsv( $output, array( 'https://example.com/group/123', '0' ) );
+			fputcsv( $output, array( 'group_url', 'post_id', 'category_id' ) );
+			fputcsv( $output, array( 'https://example.com/group/123', '0', '1' ) );
 		}
 
 		fclose( $output );
@@ -133,8 +136,9 @@ class SCM_Import_Export {
 					continue;
 				}
 				$wpdb->insert( $table_name, array(
-					'group_url' => esc_url_raw( $data['group_url'] ),
-					'post_id'   => intval( $data['post_id'] ),
+					'group_url'   => esc_url_raw( $data['group_url'] ),
+					'post_id'     => intval( $data['post_id'] ),
+					'category_id' => isset( $data['category_id'] ) ? intval( $data['category_id'] ) : 0,
 				) );
 			} elseif ( $type === 'content_posts' ) {
 				$post_content = wp_kses_post( $data['post_content'] );
@@ -145,6 +149,7 @@ class SCM_Import_Export {
 				}
 				$wpdb->insert( $table_name, array(
 					'post_content'            => $post_content,
+					'category_id'             => isset( $data['category_id'] ) ? intval( $data['category_id'] ) : 0,
 					'good_for_fb_group'       => intval( $data['good_for_fb_group'] ),
 					'good_for_linkedin_group' => intval( $data['good_for_linkedin_group'] ),
 					'facebook'                => intval( $data['facebook'] ),
@@ -157,6 +162,14 @@ class SCM_Import_Export {
 					'ig'                      => intval( $data['ig'] ),
 					'created_at'              => current_time( 'mysql' ),
 				) );
+			} elseif ( $type === 'categories' ) {
+				$name = sanitize_text_field( $data['name'] );
+				$exists = $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table_name WHERE name = %s", $name ) );
+				if ( $exists ) {
+					$skipped++;
+					continue;
+				}
+				$wpdb->insert( $table_name, array( 'name' => $name ) );
 			}
 			$imported++;
 		}

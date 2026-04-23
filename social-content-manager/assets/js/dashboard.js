@@ -3,11 +3,13 @@ jQuery(document).ready(function($) {
     let currentPlatform = null;
 
     function loadStats() {
+        const category_id = $('#scm-dashboard-category').val();
         $.ajax({
             url: scm_ajax.ajax_url,
             type: 'POST',
             data: {
                 action: 'scm_get_stats',
+                category_id: category_id,
                 nonce: scm_ajax.nonce
             },
             success: function(response) {
@@ -35,6 +37,7 @@ jQuery(document).ready(function($) {
     loadStats();
 
     $('#scm-refresh-stats').on('click', loadStats);
+    $('#scm-dashboard-category').on('change', loadStats);
 
     $('#scm-reset-usage').on('click', function() {
         if (confirm('Are you sure you want to reset ALL usage tracking? This cannot be undone.')) {
@@ -64,12 +67,14 @@ jQuery(document).ready(function($) {
         $('.scm-content-display').hide();
         $('#scm-group-link-area').hide();
 
+        const category_id = $('#scm-dashboard-category').val();
         $.ajax({
             url: scm_ajax.ajax_url,
             type: 'POST',
             data: {
                 action: 'scm_get_content',
                 platform: platform,
+                category_id: category_id,
                 nonce: scm_ajax.nonce
             },
             success: function(response) {
