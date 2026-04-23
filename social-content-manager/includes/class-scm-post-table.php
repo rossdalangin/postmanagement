@@ -72,43 +72,58 @@ class SCM_Post_Table extends WP_List_Table {
 		return implode( ', ', $platforms );
 	}
 
+	public function get_sortable_columns() {
+		return array(
+			'created_at'   => array( 'created_at', true ),
+			'post_content' => array( 'post_content', false ),
+			'category'     => array( 'category', false ),
+		);
+	}
+
 	public function prepare_items() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'scm_content_posts';
+		$table_cat  = $wpdb->prefix . 'scm_categories';
 
 		$per_page = 20;
 		$columns  = $this->get_columns();
 		$hidden   = array();
-		$sortable = array(
-			'created_at' => array( 'created_at', true ),
-		);
+		$sortable = $this->get_sortable_columns();
 
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 
 		$current_page = $this->get_pagenum();
 		$offset       = ( $current_page - 1 ) * $per_page;
 
-		$valid_orderby = array( 'created_at', 'post_content', 'id' );
-		$orderby = ( ! empty( $_GET['orderby'] ) && in_array( $_GET['orderby'], $valid_orderby ) ) ? $_GET['orderby'] : 'created_at';
+		$valid_orderby = array( 'created_at' => 't.created_at', 'post_content' => 't.post_content', 'category' => 'c.name', 'id' => 't.id' );
+		$orderby = ( ! empty( $_GET['orderby'] ) && array_key_exists( $_GET['orderby'], $valid_orderby ) ) ? $valid_orderby[ $_GET['orderby'] ] : 't.created_at';
 		$order   = ( ! empty( $_GET['order'] ) && strtoupper( $_GET['order'] ) === 'ASC' ) ? 'ASC' : 'DESC';
 
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( $_REQUEST['s'] ) : '';
-		$where = '';
+		$where = ' WHERE 1=1';
+		$params = array();
+
 		if ( ! empty( $search ) ) {
-			$where = $wpdb->prepare( " WHERE post_content LIKE %s", '%' . $wpdb->esc_like( $search ) . '%' );
+			$where .= " AND t.post_content LIKE %s";
+			$params[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
 
-		$total_items = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name $where" );
+		$total_items_query = "SELECT COUNT(t.id) FROM $table_name t $where";
+		if ( ! empty( $params ) ) {
+			$total_items = $wpdb->get_var( $wpdb->prepare( $total_items_query, $params ) );
+		} else {
+			$total_items = $wpdb->get_var( $total_items_query );
+		}
 
-		$table_cat = $wpdb->prefix . 'scm_categories';
-		$this->items = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT t.*, c.name as category
+		$query = "SELECT t.*, c.name as category
 				 FROM $table_name t
 				 LEFT JOIN $table_cat c ON t.category_id = c.id
-				 $where ORDER BY $orderby $order LIMIT %d OFFSET %d",
-				$per_page, $offset
-			),
+				 $where ORDER BY $orderby $order LIMIT %d OFFSET %d";
+
+		$query_params = array_merge( $params, array( $per_page, $offset ) );
+
+		$this->items = $wpdb->get_results(
+			$wpdb->prepare( $query, $query_params ),
 			ARRAY_A
 		);
 

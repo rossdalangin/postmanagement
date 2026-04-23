@@ -67,19 +67,31 @@ class SCM_Category_Table extends WP_List_Table {
 		$current_page = $this->get_pagenum();
 		$offset       = ( $current_page - 1 ) * $per_page;
 
-		$orderby = ( ! empty( $_GET['orderby'] ) ) ? sanitize_sql_orderby( $_GET['orderby'] ) : 'name';
+		$valid_orderby = array( 'name', 'id' );
+		$orderby = ( ! empty( $_GET['orderby'] ) && in_array( $_GET['orderby'], $valid_orderby ) ) ? $_GET['orderby'] : 'name';
 		$order   = ( ! empty( $_GET['order'] ) && strtoupper( $_GET['order'] ) === 'DESC' ) ? 'DESC' : 'ASC';
 
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( $_REQUEST['s'] ) : '';
-		$where = '';
+		$where = ' WHERE 1=1';
+		$params = array();
+
 		if ( ! empty( $search ) ) {
-			$where = $wpdb->prepare( " WHERE name LIKE %s", '%' . $wpdb->esc_like( $search ) . '%' );
+			$where .= " AND name LIKE %s";
+			$params[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
 
-		$total_items = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name $where" );
+		$total_items_query = "SELECT COUNT(id) FROM $table_name $where";
+		if ( ! empty( $params ) ) {
+			$total_items = $wpdb->get_var( $wpdb->prepare( $total_items_query, $params ) );
+		} else {
+			$total_items = $wpdb->get_var( $total_items_query );
+		}
+
+		$query = "SELECT * FROM $table_name $where ORDER BY $orderby $order LIMIT %d OFFSET %d";
+		$query_params = array_merge( $params, array( $per_page, $offset ) );
 
 		$this->items = $wpdb->get_results(
-			$wpdb->prepare( "SELECT * FROM $table_name $where ORDER BY $orderby $order LIMIT %d OFFSET %d", $per_page, $offset ),
+			$wpdb->prepare( $query, $query_params ),
 			ARRAY_A
 		);
 

@@ -60,9 +60,18 @@ class SCM_LI_Group_Table extends WP_List_Table {
 		);
 	}
 
+	public function get_sortable_columns() {
+		return array(
+			'group_url' => array( 'group_url', false ),
+			'category'  => array( 'category', false ),
+			'post_id'   => array( 'post_id', false ),
+		);
+	}
+
 	public function prepare_items() {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'scm_linkedin_groups';
+		$table_cat  = $wpdb->prefix . 'scm_categories';
 
 		$per_page = 20;
 		$columns  = $this->get_columns();
@@ -74,23 +83,35 @@ class SCM_LI_Group_Table extends WP_List_Table {
 		$current_page = $this->get_pagenum();
 		$offset       = ( $current_page - 1 ) * $per_page;
 
+		$valid_orderby = array( 'group_url' => 't.group_url', 'category' => 'c.name', 'post_id' => 't.post_id', 'id' => 't.id' );
+		$orderby = ( ! empty( $_GET['orderby'] ) && array_key_exists( $_GET['orderby'], $valid_orderby ) ) ? $valid_orderby[ $_GET['orderby'] ] : 't.id';
+		$order   = ( ! empty( $_GET['order'] ) && strtoupper( $_GET['order'] ) === 'DESC' ) ? 'DESC' : 'ASC';
+
 		$search = isset( $_REQUEST['s'] ) ? sanitize_text_field( $_REQUEST['s'] ) : '';
-		$where = '';
+		$where = ' WHERE 1=1';
+		$params = array();
+
 		if ( ! empty( $search ) ) {
-			$where = $wpdb->prepare( " WHERE group_url LIKE %s", '%' . $wpdb->esc_like( $search ) . '%' );
+			$where .= " AND t.group_url LIKE %s";
+			$params[] = '%' . $wpdb->esc_like( $search ) . '%';
 		}
 
-		$total_items = $wpdb->get_var( "SELECT COUNT(id) FROM $table_name $where" );
+		$total_items_query = "SELECT COUNT(t.id) FROM $table_name t $where";
+		if ( ! empty( $params ) ) {
+			$total_items = $wpdb->get_var( $wpdb->prepare( $total_items_query, $params ) );
+		} else {
+			$total_items = $wpdb->get_var( $total_items_query );
+		}
 
-		$table_cat = $wpdb->prefix . 'scm_categories';
-		$this->items = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT t.*, c.name as category
+		$query = "SELECT t.*, c.name as category
 				 FROM $table_name t
 				 LEFT JOIN $table_cat c ON t.category_id = c.id
-				 $where LIMIT %d OFFSET %d",
-				$per_page, $offset
-			),
+				 $where ORDER BY $orderby $order LIMIT %d OFFSET %d";
+
+		$query_params = array_merge( $params, array( $per_page, $offset ) );
+
+		$this->items = $wpdb->get_results(
+			$wpdb->prepare( $query, $query_params ),
 			ARRAY_A
 		);
 
