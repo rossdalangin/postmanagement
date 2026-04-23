@@ -18,6 +18,7 @@ class SCM_Import_Export {
 	public function __construct() {
 		add_action( 'admin_post_scm_export_csv', array( $this, 'handle_export' ) );
 		add_action( 'admin_post_scm_import_csv', array( $this, 'handle_import' ) );
+		add_action( 'admin_post_scm_download_template', array( $this, 'handle_download_template' ) );
 	}
 
 	public function handle_export() {
@@ -70,6 +71,32 @@ class SCM_Import_Export {
 
 			fclose( $output );
 		}
+		exit;
+	}
+
+	public function handle_download_template() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Unauthorized' );
+		}
+		check_admin_referer( 'scm_download_template' );
+
+		$type = sanitize_text_field( $_POST['template_type'] );
+		$filename = 'sample-' . str_replace( '_', '-', $type ) . '.csv';
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=' . $filename );
+
+		$output = fopen( 'php://output', 'w' );
+
+		if ( $type === 'content_posts' ) {
+			fputcsv( $output, array( 'post_content', 'good_for_fb_group', 'good_for_linkedin_group', 'facebook', 'linkedin', 'youtube', 'tiktok', 'pinterest', 'twitter', 'threads', 'ig' ) );
+			fputcsv( $output, array( 'Sample social media content here...', '1', '1', '0', '0', '0', '0', '0', '0', '0', '0' ) );
+		} else {
+			fputcsv( $output, array( 'group_url', 'post_id' ) );
+			fputcsv( $output, array( 'https://example.com/group/123', '0' ) );
+		}
+
+		fclose( $output );
 		exit;
 	}
 

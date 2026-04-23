@@ -38,8 +38,17 @@ $platforms = array(
                 <td>
                     <fieldset>
                         <?php foreach ( $platforms as $key => $label ) : ?>
+                            <?php
+                                $checked = false;
+                                if ( $post_data ) {
+                                    if ( $post_data->$key ) $checked = true;
+                                } else {
+                                    // Defaults for new posts
+                                    if ( $key === 'good_for_fb_group' || $key === 'good_for_linkedin_group' ) $checked = true;
+                                }
+                            ?>
                             <label for="<?php echo esc_attr( $key ); ?>">
-                                <input name="<?php echo esc_attr( $key ); ?>" type="checkbox" id="<?php echo esc_attr( $key ); ?>" value="1" <?php if ( $post_data && $post_data->$key ) echo 'checked'; ?>>
+                                <input name="<?php echo esc_attr( $key ); ?>" type="checkbox" id="<?php echo esc_attr( $key ); ?>" value="1" <?php echo $checked ? 'checked' : ''; ?>>
                                 <?php echo esc_html( $label ); ?>
                             </label><br>
                         <?php endforeach; ?>

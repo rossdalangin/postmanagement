@@ -24,6 +24,31 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     </div>
 
     <div class="card">
+        <h2>Download CSV Templates</h2>
+        <p>Download sample CSV templates to ensure your import file is correctly formatted.</p>
+        <div style="display: flex; gap: 10px;">
+            <form method="post" action="<?php echo admin_url( 'admin-post.php' ); ?>">
+                <input type="hidden" name="action" value="scm_download_template">
+                <input type="hidden" name="template_type" value="facebook_groups">
+                <?php wp_nonce_field( 'scm_download_template' ); ?>
+                <button type="submit" class="button">Facebook Groups Template</button>
+            </form>
+            <form method="post" action="<?php echo admin_url( 'admin-post.php' ); ?>">
+                <input type="hidden" name="action" value="scm_download_template">
+                <input type="hidden" name="template_type" value="linkedin_groups">
+                <?php wp_nonce_field( 'scm_download_template' ); ?>
+                <button type="submit" class="button">LinkedIn Groups Template</button>
+            </form>
+            <form method="post" action="<?php echo admin_url( 'admin-post.php' ); ?>">
+                <input type="hidden" name="action" value="scm_download_template">
+                <input type="hidden" name="template_type" value="content_posts">
+                <?php wp_nonce_field( 'scm_download_template' ); ?>
+                <button type="submit" class="button">Content Posts Template</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
         <h2>Import Data (CSV)</h2>
         <p>Upload a CSV file to import data. Note: The first row should be headers.</p>
         <form method="post" action="<?php echo admin_url( 'admin-post.php' ); ?>" enctype="multipart/form-data">

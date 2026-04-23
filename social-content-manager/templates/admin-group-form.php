@@ -23,7 +23,7 @@ if ( $id ) {
             </tr>
             <tr>
                 <th><label for="post_id">Post ID</label></th>
-                <td><input name="post_id" type="number" id="post_id" value="<?php echo $group ? esc_attr( $group->post_id ) : ''; ?>" class="regular-text" required></td>
+                <td><input name="post_id" type="number" id="post_id" value="<?php echo $group ? esc_attr( $group->post_id ) : '0'; ?>" class="regular-text" required></td>
             </tr>
         </table>
         <?php submit_button(); ?>
